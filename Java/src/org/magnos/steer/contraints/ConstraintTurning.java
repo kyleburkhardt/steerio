@@ -27,14 +27,14 @@ public class ConstraintTurning implements Constraint
 	{
 		final Vector v = subject.getDirection();
 		final Vector a = subject.getAcceleration();
-		float alength = a.length();
+		float alength = a.length2d();
 		float inner = (float)Math.acos( v.dot(a) / alength );
 		
 		if (inner > radians)
 		{
 			a.set( v );
 			a.rotatei( v.cross( a ) > 0 ? radians : SteerMath.PI2 - radians );
-			a.length( alength );
+			a.length2d( alength );
 		}
 	}
 	

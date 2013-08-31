@@ -47,7 +47,7 @@ public abstract class AbstractSteer implements Steer
 	
 	public static void maximize(SteerSubject subject, Vector force)
 	{
-		if (force.length( subject.getAccelerationMax() ) > 0) 
+		if (force.length2d( subject.getAccelerationMax() ) > 0) 
 		{
 			force.subi( subject.getVelocity() );
 		}
@@ -65,7 +65,7 @@ public abstract class AbstractSteer implements Steer
 	
 	public static float intersectionTime(SteerSubject bullet, SteerSubject target)
 	{
-		return SteerMath.interceptTime( target.getPosition(), target.getVelocity().length(), bullet.getPosition(), bullet.getVelocity() );
+		return SteerMath.interceptTime( target.getPosition(), target.getVelocity().length2d(), bullet.getPosition(), bullet.getVelocity() );
 	}
 	
 }

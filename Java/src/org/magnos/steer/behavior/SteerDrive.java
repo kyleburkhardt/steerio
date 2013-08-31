@@ -41,7 +41,7 @@ public class SteerDrive extends AbstractSteer
 	{
 		Vector dir = subject.getDirection();
 		Vector vel = subject.getVelocity();
-		float speed = vel.length();
+		float speed = vel.length2d();
 		
 		force.clear();
 		

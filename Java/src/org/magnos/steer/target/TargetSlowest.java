@@ -68,7 +68,7 @@ public class TargetSlowest implements Target, SearchCallback
 		{
 			SteerSubject subject = (SteerSubject)entity;
 			
-			float vsq = subject.getVelocity().lengthSq();
+			float vsq = subject.getVelocity().lengthSq2d();
 			
 			if ( vsq < slowestVelocitySq )
 			{

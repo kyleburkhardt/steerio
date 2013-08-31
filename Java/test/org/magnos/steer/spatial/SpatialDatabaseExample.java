@@ -10,6 +10,8 @@ import java.util.ArrayDeque;
 import java.util.HashSet;
 import java.util.Queue;
 import java.util.Set;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 import org.magnos.steer.SteerMath;
 import org.magnos.steer.Vector;
@@ -110,6 +112,63 @@ public class SpatialDatabaseExample implements Game, CollisionCallback, SearchCa
 	public double statIntersectSeconds;
 	public int statIntersectCount;
 	
+	public ExecutorService pool = Executors.newFixedThreadPool( 100 );
+	
+	public class AddEvent implements Runnable {
+
+		SpatialDatabase database;
+		BouncyBall entity;
+		EntityList<BouncyBall> balls;
+		
+		public AddEvent(SpatialDatabase database, BouncyBall entity, EntityList<BouncyBall> balls) {
+			this.database = database;
+			this.entity = entity;
+			this.balls = balls;
+		}
+		
+		@Override
+		public void run()
+		{			
+			try
+			{
+				Thread.sleep( 100 );
+			}
+			catch (InterruptedException e)
+			{
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+			database.add( entity );
+		
+		}
+		
+	}
+	
+	public class RemoveEvent implements Runnable {
+
+		BouncyBall entity;
+		
+		public RemoveEvent(BouncyBall entity) {
+			this.entity = entity;
+		}
+		
+		@Override
+		public void run()
+		{
+			try
+			{
+				Thread.sleep( 100 );
+			}
+			catch (InterruptedException e)
+			{
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+			entity.expire();
+		}
+		
+	}
+	
 	@Override
 	public void start( Scene scene )
 	{
@@ -120,9 +179,11 @@ public class SpatialDatabaseExample implements Game, CollisionCallback, SearchCa
 		knnOverlap = new float[ knn ];
 		
 		balls = new EntityList<BouncyBall>();
-		database = new SpatialArray( ballCount );
+		database = new SpatialQuadTree( 0, 0, WIDTH, HEIGHT, 8, 30 );
 		
 		fill();
+		
+		
 		
 		playing = true;
 	}
@@ -142,16 +203,17 @@ public class SpatialDatabaseExample implements Game, CollisionCallback, SearchCa
 			ball.velocity.x = SteerMath.randomFloat( -VELOCITY_MAX, VELOCITY_MAX );
 			ball.velocity.y = SteerMath.randomFloat( -VELOCITY_MAX, VELOCITY_MAX );
 			
+			AddEvent event = new AddEvent(database, ball, balls);
+			pool.submit( event );
 			balls.add( ball );
-			database.add( ball );
 		}
 		
-		int tooMany = balls.size() - ballCount;
-		
-		for (int i = 0; i < tooMany; i++)
-		{
-			balls.get( i ).expire();
-		}
+//		int tooMany = balls.size() - ballCount;
+//		
+//		for (int i = 0; i < tooMany; i++)
+//		{
+//			balls.get( i ).expire();
+//		}
 	}
 	
 	private void rebuildDatabase(SpatialDatabase newDatabase)
@@ -249,6 +311,17 @@ public class SpatialDatabaseExample implements Game, CollisionCallback, SearchCa
 	@Override
 	public void update( GameState state, Scene scene )
 	{
+		
+		for(int i = 0; i < 50; ++i) {
+			RemoveEvent event = new RemoveEvent(balls.get( i ));
+			pool.submit( event );
+			//balls.get( i ).expire();
+		}
+		
+		database.refresh();
+		
+		fill();
+		
 		balls.update( state, scene );
 		
 		database.refresh();

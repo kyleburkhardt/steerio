@@ -58,9 +58,9 @@ public class SteerSet implements Steer
 			{
 				force.addi( steer.getForce( elapsed, subject ) );
 				
-				if (maximum != INFINITE && force.lengthSq() > maximumSq)
+				if (maximum != INFINITE && force.lengthSq2d() > maximumSq)
 				{
-					force.clamp( 0, maximum );
+					force.clamp2d( 0, maximum );
 					
 					break;
 				}	

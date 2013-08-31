@@ -80,7 +80,7 @@ public class SteerPath extends AbstractSteer
 		target.set( future );
 		target.subi( ahead );
 		
-		float offsetSq = target.lengthSq();
+		float offsetSq = target.lengthSq2d();
 		
 		if (offsetSq > thickness * thickness)
 		{

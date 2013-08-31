@@ -208,7 +208,7 @@ public class Segment
 		closest( v, withinPoints, out );
 		out.subi( v );
 		out.negi();
-		out.normalize();
+		out.normalize2d();
 		return out;
 	}
 	

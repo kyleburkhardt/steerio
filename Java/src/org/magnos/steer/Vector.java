@@ -1,15 +1,41 @@
 
 package org.magnos.steer;
 
+import javax.vecmath.Tuple3d;
+import javax.vecmath.Tuple3f;
+import javax.vecmath.Vector3d;
+import javax.vecmath.Vector3f;
 
-
-public class Vector implements Target
+public class Vector extends Vector3f implements Target 
 {
-
-	public float x, y;
 
 	public Vector()
 	{
+		
+	}
+	
+	public Vector(float v[]) {
+		super(v);
+	}
+	
+	public Vector(Vector3f v1) {
+		super(v1);
+	}
+	
+	public Vector(Vector3d v1) {
+		super(v1);
+	}
+
+	public Vector(Tuple3d t1) {
+		super(t1);
+	}
+	
+	public Vector(Tuple3f t1) {
+		super(t1);
+	}
+	
+	public Vector(float x, float y, float z) {
+		super(x, y, z);
 	}
 
 	public Vector( float x, float y )
@@ -305,7 +331,7 @@ public class Vector implements Target
 	/**
 	 * Returns the squared length of this vector.
 	 */
-	public float lengthSq()
+	public float lengthSq2d()
 	{
 		return x * x + y * y;
 	}
@@ -313,12 +339,12 @@ public class Vector implements Target
 	/**
 	 * Returns the length of this vector.
 	 */
-	public float length()
+	public float length2d()
 	{
 		return SteerMath.sqrt( x * x + y * y );
 	}
 
-	public float length( float length )
+	public float length2d( float length )
 	{
 		float sq = (x * x) + (y * y);
 		float actual = length;
@@ -353,7 +379,7 @@ public class Vector implements Target
 				 SteerMath.equals( y, 0.0f, epsilon );
 	}
 
-	public Vector clamp( float min, float max )
+	public Vector clamp2d( float min, float max )
 	{
 		float sq = (x * x) + (y * y);
 
@@ -470,9 +496,9 @@ public class Vector implements Target
 	 * Normalizes this vector, making it a unit vector. A unit vector has a
 	 * length of 1.0.
 	 */
-	public float normalize()
+	public float normalize2d()
 	{
-		float m = lengthSq();
+		float m = lengthSq2d();
 
 		if (m != 0.0f)
 		{
@@ -489,7 +515,7 @@ public class Vector implements Target
 	
 	public Vector normal(Vector out)
 	{
-		float m = lengthSq();
+		float m = lengthSq2d();
 		
 		out.set( x, y );
 		

@@ -158,7 +158,7 @@ public abstract class SteerBasicExample implements Game
 
 	public static void drawForce( Graphics2D gr, Color color, Vector offset, Vector force, boolean wrap )
 	{
-		Vector n = force.mul( DRAW_FORCE_SCALE ).clamp( DRAW_FORCE_MIN, DRAW_FORCE_MAX );
+		Vector n = force.mul( DRAW_FORCE_SCALE ).clamp2d( DRAW_FORCE_MIN, DRAW_FORCE_MAX );
 
 		line.setLine( offset.x, offset.y, offset.x + n.x, offset.y + n.y );
 

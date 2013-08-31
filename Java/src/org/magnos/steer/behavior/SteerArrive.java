@@ -44,7 +44,7 @@ public class SteerArrive extends AbstractSteer
 		{
 			force.directi( subject.getPosition(), targetPosition );
 			
-			float distance = force.length();
+			float distance = force.length2d();
 			
 			if (distance > arrived)
 			{

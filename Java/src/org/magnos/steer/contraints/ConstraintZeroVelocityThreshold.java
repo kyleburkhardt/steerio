@@ -20,7 +20,7 @@ public class ConstraintZeroVelocityThreshold implements Constraint
 	{
 		final Vector v = subject.getVelocity();
 		
-		if ( v.lengthSq() < threshold * threshold )
+		if ( v.lengthSq2d() < threshold * threshold )
 		{
 			v.clear();
 		}
