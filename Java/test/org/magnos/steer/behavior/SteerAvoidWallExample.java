@@ -3,14 +3,14 @@ package org.magnos.steer.behavior;
 
 import java.awt.Color;
 import java.awt.Graphics2D;
-import java.util.ArrayList;
-import java.util.List;
 
 import org.magnos.steer.SteerSet;
+import org.magnos.steer.obstacle.Plane;
 import org.magnos.steer.spatial.SpatialDatabase;
-import org.magnos.steer.spatial.SpatialEntityWall;
+import org.magnos.steer.spatial.SpatialEntityObstacle;
 import org.magnos.steer.spatial.array.SpatialArray;
 import org.magnos.steer.test.SteerSprite;
+import org.magnos.steer.vec.Vec2;
 
 import com.gameprogblog.engine.Game;
 import com.gameprogblog.engine.GameLoop;
@@ -34,36 +34,37 @@ public class SteerAvoidWallExample extends SteerBasicExample
 		GameScreen.showWindow( screen, "SteerAvoidExample" );
 	}
 
-	private List<SpatialEntityWall> walls;
-	private SpatialDatabase database;
-	private SteerAvoidObstacles obstacles;
+	private SpatialDatabase<Vec2> database;
+	private SteerAvoidObstacles<Vec2> obstacles;
 	private SteerSprite sprite;
 
 	public SteerAvoidWallExample( int w, int h )
 	{
 		super( w, h );
+		
+		this.wrapEntities = false;
 	}
 
 	@Override
 	public void start( Scene scene )
 	{
-		walls = new ArrayList<SpatialEntityWall>();
-		walls.add( new SpatialEntityWall( 24, 24, width - 24, 24, GROUP_WALL, GROUP_WALL ) );
-		walls.add( new SpatialEntityWall( width - 24, 24, width - 24, height - 24, GROUP_WALL, GROUP_WALL ) );
-		walls.add( new SpatialEntityWall( width - 24, height - 24, 24, height - 24, GROUP_WALL, GROUP_WALL ) );
-		walls.add( new SpatialEntityWall( 24, height - 24, 24, 24, GROUP_WALL, GROUP_WALL ) );
+        database = new SpatialArray<Vec2>( 16 );
+	    
+        Plane<Vec2> sideL = new Plane<Vec2>( new Vec2(0, DEFAULT_HEIGHT / 2), Vec2.RIGHT );
+        Plane<Vec2> sideR = new Plane<Vec2>( new Vec2(DEFAULT_WIDTH, DEFAULT_HEIGHT / 2), Vec2.LEFT );
+        Plane<Vec2> sideT = new Plane<Vec2>( new Vec2(DEFAULT_WIDTH / 2, 0), Vec2.TOP );
+        Plane<Vec2> sideB = new Plane<Vec2>( new Vec2(DEFAULT_WIDTH / 2, DEFAULT_HEIGHT), Vec2.BOTTOM );
+        
+        database.add( new SpatialEntityObstacle<Vec2>( sideL, new Vec2(), GROUP_WALL, 0, true ) ); // left side
+        database.add( new SpatialEntityObstacle<Vec2>( sideR, new Vec2(), GROUP_WALL, 0, true ) ); // right side
+        database.add( new SpatialEntityObstacle<Vec2>( sideT, new Vec2(), GROUP_WALL, 0, true ) ); // top side
+        database.add( new SpatialEntityObstacle<Vec2>( sideB, new Vec2(), GROUP_WALL, 0, true ) ); // bottom side
 		
-		database = new SpatialArray( 16 );
-		
-		for (SpatialEntityWall w : walls)
-		{
-			database.add( w );
-		}
-		
-		sprite = newSprite( Color.blue, 15, 300, 1000, new SteerSet( 
-			obstacles = new SteerAvoidObstacles( database, 80.0f, 5.0f ),
-			new SteerWander( 0, 100, 150, 80 )
+		sprite = newSprite( Color.blue, 15, 300, 1000, new SteerSet<Vec2>( 900,
+			obstacles = new SteerAvoidObstacles<Vec2>( database, 80.0f, 30.0f, Vec2.FACTORY ),
+			new SteerWander2( 0, 100, 150, 80 )
 		));
+		sprite.drawWrapped = false;
 	}
 
 	@Override
@@ -71,11 +72,6 @@ public class SteerAvoidWallExample extends SteerBasicExample
 	{
 		super.draw( state, gr, scene );
 
-		for (SpatialEntityWall w : walls)
-		{
-			drawLine( gr, Color.white, w.getStart(), w.getEnd(), false );
-		}
-		
 		drawLine( gr, Color.blue, sprite.getPosition(), obstacles.lookaheadPoint, false );
 	}
 

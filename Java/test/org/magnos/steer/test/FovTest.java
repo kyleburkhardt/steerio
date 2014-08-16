@@ -7,7 +7,7 @@ import java.awt.geom.Ellipse2D;
 import java.awt.geom.Line2D;
 
 import org.magnos.steer.SteerMath;
-import org.magnos.steer.Vector;
+import org.magnos.steer.vec.Vec2;
 
 import com.gameprogblog.engine.Game;
 import com.gameprogblog.engine.GameLoop;
@@ -37,24 +37,25 @@ public class FovTest implements Game
 	private static final Line2D.Float line = new Line2D.Float();
 	
 	public boolean playing;
-	public Vector origin;
-	public Vector direction;
-	public Vector target;
-	public Vector fov;
-	public Vector circlePos;
+	public Vec2 origin;
+	public Vec2 direction;
+	public Vec2 target;
+	public Vec2 fov;
+	public float fovAngle;
+	public Vec2 circlePos;
 	public float circleRadius;
 	public boolean circleEntirely;
 
 	@Override
 	public void start( Scene scene )
 	{
-		origin = new Vector( WIDTH / 2, HEIGHT / 2 );
-		target = new Vector( WIDTH / 4, HEIGHT / 4 );
-		circlePos = new Vector( WIDTH / 3, HEIGHT / 2 );
+		origin = new Vec2( WIDTH / 2, HEIGHT / 2 );
+		target = new Vec2( WIDTH / 4, HEIGHT / 4 );
+		circlePos = new Vec2( WIDTH / 3, HEIGHT / 2 );
 		circleRadius = 50.0f;
 		circleEntirely = false;
-		direction = new Vector( 1.0f, 0.0f );
-		fov = new Vector().angle( SteerMath.PI * 0.25f, 1.0f );
+		direction = new Vec2( 1.0f, 0.0f );
+		fov = Vec2.fromAngle( fovAngle = SteerMath.PI * 0.25f );
 		playing = true;
 	}
 
@@ -85,6 +86,7 @@ public class FovTest implements Game
 		if (input.keyDown[KeyEvent.VK_F])
 		{
 			fov.set( input.mouseX, input.mouseY ).subi( origin ).normali();
+			fovAngle = fov.angle();
 		}
 		if (input.keyUp[KeyEvent.VK_E])
 		{
@@ -102,19 +104,21 @@ public class FovTest implements Game
 	{
 		float radius = 200.0f;
 		
-		Vector upper = new Vector( fov.x, fov.y );
-		Vector lower = new Vector( fov.x, -fov.y );
+		Vec2 upper = new Vec2( fov.x, fov.y );
+		Vec2 lower = new Vec2( fov.x, -fov.y );
 		
-		Vector upperRotated = upper.rotate( direction );
-		Vector lowerRotated = lower.rotate( direction );
+		Vec2 upperRotated = upper.rotate( direction );
+		Vec2 lowerRotated = lower.rotate( direction );
 
-		Vector towards = target.sub( origin );
+		/*
+		Vec2 towards = target.sub( origin );
 		float ut = upperRotated.cross( towards );
 		float lt = lowerRotated.cross( towards );
 		
 		boolean view = (ut <= 0 && lt >= 0 ) || (fov.x < 0.0f && ((ut >= 0 && lt >= 0) || (ut <= 0 && lt <= 0)));
 		
 		boolean circleInView = SteerMath.isCircleInView( origin, direction, fov, circlePos, circleRadius, circleEntirely );
+		*/
 		
 		gr.setColor( Color.orange );
 		line.setLine( origin.x, origin.y, origin.x + upperRotated.x * radius, origin.y + upperRotated.y * radius );
@@ -128,7 +132,7 @@ public class FovTest implements Game
 		drawCircle( gr, target, 5, Color.red );
 		drawCircle( gr, circlePos, circleRadius, Color.yellow );
 
-		gr.setColor( Color.white );
+		/*
 		gr.drawString( String.format( "fov: {%.2f,%.2f}", fov.x, fov.y ), 2, 12 );
 		gr.drawString( String.format( "origin.distanceSq(target): %.2f", origin.distanceSq( target ) ), 2, 24 );
 		gr.drawString( String.format( "direction.dot(towards): %.2f", direction.dot(towards) ), 2, 36 );
@@ -136,9 +140,51 @@ public class FovTest implements Game
 		gr.drawString( String.format( "upperRotated.cross( towards ): %.2f", upperRotated.cross( towards ) ), 2, 60 );
 		gr.drawString( String.format( "lowerRotated.cross( towards ): %.2f", lowerRotated.cross( towards ) ), 2, 72 );
 		gr.drawString( String.format( "isCircleInView(entirely=%s): %s", circleEntirely, circleInView ), 2, 84 );
+		*/
+		
+		Vec2 _V = circlePos.sub( origin );
+		double _a = _V.dot( direction );                  // how far along the direction the sphere's center is
+		double _b = _a * Math.tan( fovAngle );            // radius of the cone at _a
+		double _c = Math.sqrt( _V.lengthSq() - _a * _a ); // distance from center of sphere to axis of the cone
+		double _d = _c - _b;                              // distance from center of sphere to the surface of the cone
+		double _e = _d * Math.cos( fovAngle );            // shortest distance from center of the sphere to the surface of the cone
+		
+		boolean _inview = false;
+		
+		if ( _e >= circleRadius ) {
+		    // cull
+		} else if ( _e <= -circleRadius ) {
+		    // totally
+		    _inview = true;
+		} else {
+		    // partially
+		    if (!circleEntirely) {
+		        _inview = true;
+		    }
+		}
+		
+		Vec2 farAlong = SteerMath.closest( origin, direction.mul( radius ).addi( origin ), circlePos, new Vec2() );
+        line.setLine( origin.x, origin.y, farAlong.x, farAlong.y );
+        gr.draw( line );
+        line.setLine( farAlong.x + direction.y * _a, farAlong.y - direction.x * _a, farAlong.x - direction.y * _a, farAlong.y + direction.x * _a );
+        gr.draw( line );
+        line.setLine( farAlong.x, farAlong.y, circlePos.x, circlePos.y );
+        gr.setColor( Color.blue );
+        gr.draw( line );
+
+        int textY = 0;
+        gr.setColor( Color.white );
+        gr.drawString( String.format( "how far along: %.2f (expected=%.2f)", _a, farAlong.distance( origin ) ), 2, textY += 12 );
+        gr.drawString( String.format( "radius of cone: %.2f", _b ), 2, textY += 12 );
+        gr.drawString( String.format( "circle->axis of cone: %.2f (expected=%.2f)", _c, farAlong.distance( circlePos ) ), 2, textY += 12 );
+        gr.drawString( String.format( "circle->surface of cone: %.2f", _d ), 2, textY += 12 );
+        gr.drawString( String.format( "shortest distance: %.2f", _e ), 2, textY += 12 );
+        gr.drawString( String.format( "inview(entirely=%s): %s", circleEntirely, _inview ), 2, textY += 12 );
+        gr.drawString( String.format( "fov: {%.2f,%.2f}: %.2f (%.2f)", fov.x, fov.y, fovAngle, Math.toDegrees( fovAngle ) ), 2, textY += 12 );
+        gr.drawString( String.format( "isCircleInView: %s", SteerMath.isCircleInView( origin, direction, Math.tan(fovAngle), Math.cos(fovAngle), circlePos, circleRadius, circleEntirely ) ), 2, textY += 12 );
 	}
 	
-	private void drawCircle( Graphics2D gr, Vector v, float size, Color color )
+	private void drawCircle( Graphics2D gr, Vec2 v, float size, Color color )
 	{
 		circle.setFrame( v.x - size, v.y - size, size * 2, size * 2 );
 		

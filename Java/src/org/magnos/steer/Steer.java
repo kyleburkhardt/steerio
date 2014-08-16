@@ -1,10 +1,12 @@
 package org.magnos.steer;
 
+import org.magnos.steer.vec.Vec;
+
 /**
  * A {@link Steer} is considered a steering behavior or a steering force which 
  * gets applied to some {@link SteerSubject}.
  */
-public interface Steer
+public interface Steer<V extends Vec<V>>
 {
 	
 	/**
@@ -22,7 +24,7 @@ public interface Steer
 	 * @return
 	 * 	The reference to the force to apply.
 	 */
-	public Vector getForce(float elapsed, SteerSubject subject );
+	public void getForce( float elapsed, SteerSubject<V> subject, V out );
 	
 	/**
 	 * Whether the steer can be/is shared by several subjects. If this is true
@@ -35,12 +37,24 @@ public interface Steer
 	public boolean isShared();
 	
 	/**
+	 * TODO
+	 * @return
+	 */
+	public boolean isMaximized();
+	
+	/**
+	 * TODO
+	 * @param maximize
+	 */
+	public void setMaximized(boolean maximize);
+	
+	/**
 	 * Returns a clone of this steering behavior. A behavior would be cloned
 	 * if it can not be shared ({@link #isShared()} returns false).
 	 * 
 	 * @return
 	 * 	A newly instantiated Steer that is a clone of this.
 	 */
-	public Steer clone();
+	public Steer<V> clone();
 	
 }

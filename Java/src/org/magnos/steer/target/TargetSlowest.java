@@ -1,17 +1,19 @@
 package org.magnos.steer.target;
 
 import org.magnos.steer.SteerSubject;
+import org.magnos.steer.Filter;
 import org.magnos.steer.Target;
-import org.magnos.steer.Vector;
 import org.magnos.steer.spatial.SearchCallback;
 import org.magnos.steer.spatial.SpatialDatabase;
 import org.magnos.steer.spatial.SpatialEntity;
+import org.magnos.steer.vec.Vec;
 
 
-public class TargetSlowest implements Target, SearchCallback
+public class TargetSlowest<V extends Vec<V>> implements Target<V>, SearchCallback<V>
 {
 
-	public SpatialDatabase space;
+	public SpatialDatabase<V> space;
+    public Filter<V, SpatialEntity<V>> filter;
 	public float queryOffset;
 	public float queryRadius;
 	public boolean contains;
@@ -19,22 +21,28 @@ public class TargetSlowest implements Target, SearchCallback
 	public long groups;
 	
 	public float slowestVelocitySq;
-	public final Vector queryPosition = new Vector();
-	public final Vector target = new Vector();
+	public final V queryPosition;
+	public final V target;
+	
+	protected SteerSubject<V> subject;
 
-	public TargetSlowest(SpatialDatabase space, float queryOffset, float queryRadius, boolean contains, int max, long groups)
+	public TargetSlowest(SpatialDatabase<V> space, Filter<V, SpatialEntity<V>> filter, float queryOffset, float queryRadius, boolean contains, int max, long groups, V template)
 	{
 		this.space = space;
+		this.filter = filter;
 		this.queryOffset = queryOffset;
 		this.queryRadius = queryRadius;
 		this.contains = contains;
 		this.max = max;
 		this.groups = groups;
+		this.queryPosition = template.create();
+		this.target = template.create();
 	}
 	
 	@Override
-	public Vector getTarget( SteerSubject subject )
+	public V getTarget( SteerSubject<V> s )
 	{
+	    subject = s;
 		slowestVelocitySq = Float.MAX_VALUE;
 		
 		queryPosition.set( subject.getPosition() );
@@ -60,13 +68,13 @@ public class TargetSlowest implements Target, SearchCallback
 	}
 
 	@Override
-	public boolean onFound( SpatialEntity entity, float overlap, int index, Vector queryOffset, float queryRadius, int queryMax, long queryGroups )
+	public boolean onFound( SpatialEntity<V> entity, float overlap, int index, V queryOffset, float queryRadius, int queryMax, long queryGroups )
 	{
-		boolean applicable = (entity instanceof SteerSubject);
+		boolean applicable = (entity instanceof SteerSubject) && (filter == null || filter.isValid( subject, entity ));
 
 		if ( applicable )
 		{
-			SteerSubject subject = (SteerSubject)entity;
+			SteerSubject<V> subject = (SteerSubject<V>)entity;
 			
 			float vsq = subject.getVelocity().lengthSq2d();
 			

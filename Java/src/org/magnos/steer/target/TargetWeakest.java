@@ -2,41 +2,46 @@ package org.magnos.steer.target;
 
 import org.magnos.steer.SteerMath;
 import org.magnos.steer.SteerSubject;
+import org.magnos.steer.Filter;
 import org.magnos.steer.Target;
-import org.magnos.steer.Vector;
 import org.magnos.steer.spatial.SearchCallback;
 import org.magnos.steer.spatial.SpatialDatabase;
 import org.magnos.steer.spatial.SpatialEntity;
+import org.magnos.steer.vec.Vec;
 
 // TODO factor in the estimated cost of turning to face the weakest subject
-public class TargetWeakest implements Target, SearchCallback
+public class TargetWeakest<V extends Vec<V>> implements Target<V>, SearchCallback<V>
 {
 
-	public SpatialDatabase space;
+	public SpatialDatabase<V> space;
+    public Filter<V, SpatialEntity<V>> filter;
 	public float queryOffset;
 	public float queryRadius;
 	public boolean contains;
 	public int max;
 	public long groups;
 	
-	public SteerSubject subject;
+	public SteerSubject<V> subject;
 	public float weakestTime;
-	public SteerSubject weakest;
-	public final Vector queryPosition = new Vector();
-	public final Vector target = new Vector();
+	public SteerSubject<V> weakest;
+	public final V queryPosition;
+	public final V target;
 
-	public TargetWeakest(SpatialDatabase space, float queryOffset, float queryRadius, boolean contains, int max, long groups)
+	public TargetWeakest(SpatialDatabase<V> space, Filter<V, SpatialEntity<V>> filter, float queryOffset, float queryRadius, boolean contains, int max, long groups, V template)
 	{
 		this.space = space;
+		this.filter = filter;
 		this.queryOffset = queryOffset;
 		this.queryRadius = queryRadius;
 		this.contains = contains;
 		this.max = max;
 		this.groups = groups;
+		this.queryPosition = template.create();
+		this.target = template.create();
 	}
 	
 	@Override
-	public Vector getTarget( SteerSubject ss )
+	public V getTarget( SteerSubject<V> ss )
 	{
 		weakest = null;
 		weakestTime = Float.MAX_VALUE;
@@ -68,13 +73,13 @@ public class TargetWeakest implements Target, SearchCallback
 	}
 
 	@Override
-	public boolean onFound( SpatialEntity entity, float overlap, int index, Vector queryOffset, float queryRadius, int queryMax, long queryGroups )
+	public boolean onFound( SpatialEntity<V> entity, float overlap, int index, V queryOffset, float queryRadius, int queryMax, long queryGroups )
 	{
-		boolean applicable = (entity instanceof SteerSubject);
+		boolean applicable = (entity instanceof SteerSubject) && (filter == null || filter.isValid( subject, entity ));
 		
 		if (applicable)
 		{
-			SteerSubject ss = (SteerSubject)entity;
+			SteerSubject<V> ss = (SteerSubject<V>)entity;
 			
 			float time = SteerMath.interceptTime( subject.getPosition(), subject.getVelocityMax(), ss.getPosition(), ss.getVelocity() );
 			

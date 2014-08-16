@@ -1,22 +1,29 @@
 
 package org.magnos.steer.spatial;
 
-import org.magnos.steer.Vector;
+import org.magnos.steer.Obstacle;
+import org.magnos.steer.vec.Vec;
 
 
-public interface SpatialEntity
+public interface SpatialEntity<V extends Vec<V>> extends Obstacle<V>
 {
 
-	public Vector getPosition();
+    public V getPosition();
 
-	public float getRadius();
+    public float getRadius();
 
-	public long getSpatialGroups();
-	
-	public long getSpatialCollisionGroups();
+    public long getSpatialGroups();
 
-	public boolean isStatic();
+    public long getSpatialCollisionGroups();
 
-	public boolean isInert();
+    public boolean isStatic();
+
+    public boolean isInert();
+
+    public void attach( Object attachment );
+
+    public <T> T attachment();
+
+    public <T> T attachment( Class<T> type );
 
 }
